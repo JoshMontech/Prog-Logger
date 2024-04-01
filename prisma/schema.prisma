@@ -1,0 +1,88 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider  = "postgresql"
+    url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
+    directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+}
+
+model StaticGroup {
+    id           String        @id @default(uuid())
+    dateCreated  DateTime      @default(now()) // Automatically set to current timestamp
+    name         String
+    players      Player[]      @relation("StaticGroupPlayers")
+    progSessions ProgSession[]
+}
+
+model Player {
+    id            String        @id @default(uuid())
+    dateCreated   DateTime      @default(now()) // Automatically set to current timestamp
+    name          String
+    staticGroups  StaticGroup[] @relation("StaticGroupPlayers")
+    progSessions  ProgSession[] @relation("PlayerProgSessions")
+    wipes         Wipe[]
+    playerClassId String? // Foreign key for PlayerClass
+    playerClass   PlayerClass?  @relation(fields: [playerClassId], references: [id])
+}
+
+model PlayerClass {
+    id      String   @id @default(uuid())
+    name    String   @unique
+    icon    String
+    players Player[] // Relation to players
+}
+
+model ProgSession {
+    id            String      @id @default(uuid())
+    dateCreated   DateTime    @default(now()) // Automatically set to current timestamp
+    staticGroup   StaticGroup @relation(fields: [staticGroupId], references: [id])
+    staticGroupId String
+    players       Player[]    @relation("PlayerProgSessions")
+    wipes         Wipe[]
+}
+
+model Wipe {
+    id            String      @id @default(uuid())
+    dateCreated   DateTime    @default(now())
+    progSession   ProgSession @relation(fields: [progSessionId], references: [id])
+    progSessionId String
+    player        Player?     @relation(fields: [playerId], references: [id])
+    playerId      String?
+    bossHealth    Float?
+    elapsedTime   String
+    note          String
+    bossGate      BossGate    @relation(fields: [bossGateId], references: [id])
+    bossGateId    String
+    wipeTags      WipeTag[]
+}
+
+model Boss {
+    id        String     @id @default(uuid())
+    name      String
+    bossGates BossGate[]
+}
+
+model BossGate {
+    id             String    @id @default(uuid())
+    boss           Boss      @relation(fields: [bossId], references: [id])
+    bossId         String
+    name           String
+    description    String
+    healthbarsLeft Int
+    secondsLeft    Int
+    wipes          Wipe[]
+    wipeTags       WipeTag[]
+}
+
+model WipeTag {
+    id          String    @id @default(uuid())
+    description String
+    wipes       Wipe[]
+    BossGate    BossGate? @relation(fields: [bossGateId], references: [id])
+    bossGateId  String?
+}
