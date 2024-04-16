@@ -1,5 +1,5 @@
 "use client"
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import {
   Button,
@@ -23,28 +23,50 @@ import {
   NumberInputStepper,
   NumberDecrementStepper,
 } from '@chakra-ui/react';
+import { MultiSelect, useMultiSelect } from 'chakra-multiselect';
+import { WipeTag } from '@prisma/client';
+import { createWipe } from '@/lib/wipeService';
+import { useRouter } from 'next/navigation';
+import router from 'next/router';
+type BossGateSelection = {
+  description: string,
+  id: string,
+  name: string,
+  totalTimeInSeconds: number,
+  totalHealthInBars: number,
+  wipeTags: WipeTag[]
+}
 
-const CreateWipeForm = ({ wipeFormProperties, players }) => {
+const CreateWipeForm = ({ wipeFormProperties, players, staticId, progSessionId }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { control, handleSubmit, watch, setValue, setError } = useForm({
+  const router = useRouter()
+  const { control, handleSubmit, watch, setValue, getValues, setError } = useForm({
     defaultValues: {
       selectedBoss: '',
       selectedGate: '',
       selectedPlayer: '',
       remainingHealthbars: 0,
       remainingTime: '',
+      optionalNote: '',
+      selectedWipeTags: [],
+      wipeTags: []
     },
+    mode: 'onChange', // Validate form when fields change
   });
   const toast = useToast();
-
   const selectedBoss = watch('selectedBoss');
   const selectedGate = watch('selectedGate');
-  const selectedBossGateObject = wipeFormProperties
+  const selectedBossGateObject: BossGateSelection = wipeFormProperties
   .find(boss => boss.id === selectedBoss)?.bossGates
   .find(gate => gate.id === selectedGate);
-  const onSubmit = (data) => {
-    alert(JSON.stringify(data, null, 2))
-    // Here you can handle form submission, for example, by making an API call.
+  const wipeTagOptions = selectedBossGateObject?.wipeTags ? selectedBossGateObject.wipeTags.map(wipeTag => {
+    return {label: wipeTag.description, value: wipeTag.id};
+  }) : []
+
+  const onSubmit = async (data) => {
+    // alert(JSON.stringify(data, null, 2))
+    const resp = await createWipe(data, staticId, progSessionId)
+    onClose();
     toast({
       title: 'Success',
       description: 'The wipe has been successfully reported.',
@@ -52,17 +74,22 @@ const CreateWipeForm = ({ wipeFormProperties, players }) => {
       duration: 5000,
       isClosable: true,
     });
-    onClose();
-  };
+    router.refresh();
+  }; 
 
-  const handleTimeInputChange = (event, onChange) => {
-    const { value } = event.target;
-    const regex = /^(?:[0-5]\d:[0-5]\d)?$/; // Allows empty, partial, or full MM:SS format
-
-    if (regex.test(value)) {
-      onChange(value);
-    }
-  };
+  const getSelectedBossGate = (newGateId?: string) => {
+    if (!newGateId) {
+      const [bossId, gateId] = getValues(['selectedBoss', 'selectedGate']);
+      return wipeFormProperties
+      .find(boss => boss.id === bossId)?.bossGates
+      .find(gate => gate.id === gateId);
+    } else {
+      const bossId = getValues('selectedBoss')
+      return wipeFormProperties
+      .find(boss => boss.id === bossId)?.bossGates
+      .find(gate => gate.id === newGateId);
+    } 
+  }
 
   return (
     <>
@@ -84,7 +111,6 @@ const CreateWipeForm = ({ wipeFormProperties, players }) => {
                     <Select {...field} required placeholder="Select boss" onChange={(e) => {
                       field.onChange(e); // This is necessary to update the form state
                       setValue('selectedGate', ''); // Reset selectedPhase when boss changes
-                      setValue('remainingHealthbars', 0);
                     }}>
                       {wipeFormProperties.map((boss) => (
                         <option key={boss.id} value={boss.id}>{boss.name}</option>
@@ -100,8 +126,16 @@ const CreateWipeForm = ({ wipeFormProperties, players }) => {
                   control={control}
                   render={({ field }) => (
                     <Select {...field} required placeholder="Select gate" disabled={!selectedBoss} onChange={(e) => {
-                        field.onChange(e); // This is necessary to update the form state
-                        setValue('remainingHealthbars', 0); // Reset selectedPhase when boss changes
+                        const selectedGateId = e.target.value;
+                        field.onChange(selectedGateId); // Update the gate selection
+                        const selectedGate = getSelectedBossGate(selectedGateId);
+                        setValue('remainingHealthbars', selectedGate ? selectedGate.totalHealthInBars : 0); // Reset selectedPhase when boss changes
+                        setValue('remainingTime', ''); // clear remaining time when boss changes
+                        setValue('selectedWipeTags', [])
+                        const wipeTagOptions = selectedGate?.wipeTags ? selectedGate.wipeTags.map(wipeTag => {
+                          return {label: wipeTag.description, value: wipeTag.id};
+                        }) : []
+                        setValue('wipeTags', wipeTagOptions)
                       }}>
                       {selectedBoss && wipeFormProperties.find(boss => boss.id === selectedBoss)?.bossGates.map(gate => (
                         <option key={gate.id} value={gate.id}>{gate.name}</option>
@@ -129,12 +163,16 @@ const CreateWipeForm = ({ wipeFormProperties, players }) => {
                 <Controller
                   name="remainingHealthbars"
                   control={control}
+                  rules={{
+                    required: 'Healthbars left is required',
+                    min: { value: 0, message: "Healthbars can't be negative" },
+                    max: { value: selectedBossGateObject ? selectedBossGateObject.totalHealthInBars : 0, message: "Healthbars exceed the total" }
+                  }}
                   render={({ field }) => (
                     <NumberInput 
                       {...field} 
                       id="remainingHealthbars" 
-                      defaultValue={selectedBossGateObject ? selectedBossGateObject.totalhealthInBars : 0}
-                      max={selectedBossGateObject ? selectedBossGateObject.totalhealthInBars : 0}
+                      max={selectedBossGateObject ? selectedBossGateObject.totalHealthInBars : 0}
                       min={0}>
                       <NumberInputField />
                       <NumberInputStepper>
@@ -160,16 +198,64 @@ const CreateWipeForm = ({ wipeFormProperties, players }) => {
                     <Input
                       {...field}
                       id="remainingTime"
-                      placeholder="Enter time as MM:SS"
+                      placeholder="MM:SS"
                       isDisabled={!selectedGate}
                       onChange={(e) => {
                         const { value } = e.target;
-                        const matchesPattern = /^[0-5]?[0-9]:[0-5][0-9]$/;
-                        if (value.length < 5 || (value === "" || matchesPattern.test(value))) {
-                            if (value.length === 2) e.target.value = e.target.value + ':'
-                          field.onChange(e);
+                        let formattedValue = value;
+                        const currentTime = getValues('remainingTime')
+                        // Directly use regex to test the input value without appending colon prematurely
+                        const regex = /^(2[0-9]|[01]?[0-9]):?([0-5]?[0-9]?)?$/;
+
+                        // Detect when user types the 2nd digit of the hour and append ':' if not present
+                        if (value.length === 2 && !value.includes(':') && /^\d{2}$/.test(value)) {
+                          formattedValue = value + ':';
+                        }
+
+                        // handle backspace on semicolon
+                        if (value.length === 2 && currentTime.length === 3) {
+                          formattedValue = value;
+                        }
+
+                        // Update the field only if the formattedValue matches the regex
+                        if (regex.test(formattedValue)) {
+                          field.onChange(formattedValue);
+                        } else if (formattedValue === value && value.length < currentTime.length) {
+                          // Allows deletion if the new value is shorter than the current, indicating backspace usage
+                          field.onChange(value);
                         }
                       }}
+                    />
+                  )}
+                />
+              </FormControl>
+              <FormControl isDisabled={!selectedGate}>
+                <FormLabel htmlFor="selectedWipeTags">Wipe Tags</FormLabel>
+                <Controller
+                  name="selectedWipeTags"
+                  control={control}
+                  render={({ field, fieldState: { error } }) => (
+                    <MultiSelect
+                      {...field}
+                      options={getValues('wipeTags')}
+                      id="selectedWipeTags"
+                      placeholder="wipe tags"
+                      disabled={!selectedGate}
+                    />
+                  )}
+                />
+              </FormControl>
+              <FormControl isDisabled={!selectedGate}>
+                <FormLabel htmlFor="optionalNote">Optional Note</FormLabel>
+                <Controller
+                  name="optionalNote"
+                  control={control}
+                  render={({ field, fieldState: { error } }) => (
+                    <Input
+                      {...field}
+                      id="optionalNote"
+                      placeholder="optional note"
+                      isDisabled={!selectedGate}
                     />
                   )}
                 />
@@ -189,52 +275,4 @@ const CreateWipeForm = ({ wipeFormProperties, players }) => {
   );
 };
       
-
-// const CreateWipeForm = ({staticId, progSessionId, wipeFormProperties}: {staticId: string, progSessionId:string, wipeFormProperties: BossFormOption[]}) => {
-//   const router = useRouter();
-//   const { isOpen, onOpen, onClose } = useDisclosure();
-//   const toast = useToast();
-//   const [bosses, setBosses] = useState([]);
-//   const [selectedBoss, setSelectedBoss] = useState('');
-//   const [selectedPhase, setSelectedPhase] = useState('');
-
-//   const handleSubmit = async (event:FormEvent) => {
-//     event.preventDefault();
-//   };
-
-//   return (
-//     <>
-//       <Button onClick={onOpen}>Report new wipe</Button>
-//       <Modal isOpen={isOpen} onClose={onClose}>
-//         <ModalOverlay />
-//         <ModalContent>
-//           <ModalHeader>New wipe</ModalHeader>
-//           <ModalCloseButton />
-//           <form onSubmit={handleSubmit}>
-//             <ModalBody>
-//             <FormControl>
-//             <FormLabel>Boss</FormLabel>
-//             <Select onChange={(e) => alert(e.target.value)}>
-//             {wipeFormProperties.map((boss) => (
-//                 <option key={boss.id} value={boss.id}>
-//                 {boss.name}
-//                 </option>
-//             ))}
-//             </Select>
-//             {}
-//         </FormControl>
-//             </ModalBody>
-//             <ModalFooter>
-//               <Button colorScheme='blue' mr={3} onClick={onClose}>
-//                 Close
-//               </Button>
-//               <Button type="submit" colorScheme="blue">Create Session</Button>
-//             </ModalFooter>
-//           </form>
-//         </ModalContent>
-//       </Modal>
-//     </>
-//   );
-// };
-
 export default CreateWipeForm;

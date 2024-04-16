@@ -45,11 +45,13 @@ const CreateProgSessionForm = ({staticId}: {staticId:string}) => {
         title: 'Success',
         description: "Progression session created successfully.",
         status: 'success',
-        duration: 9000,
+        duration: 2000,
         isClosable: true,
       });
-      router.refresh();
-      onClose(); // Close the modal on successful creation
+      onClose();
+      const {id} = await response.json()
+      router.push(`/static/${staticId}/progsession/${id}`);
+; // Close the modal on successful creation
     } catch (error:any) {
       toast({
         title: 'Error',

@@ -1,64 +1,7 @@
-'use client'
-import React from 'react'
-import {  Wipe, WipeTag } from '@prisma/client'
-import { 
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    TableContainer,
-    HStack,
-    Tag,
-    Popover,
-    PopoverTrigger,
-    Button,
-    PopoverContent,
-    PopoverArrow,
-    PopoverCloseButton,
-    PopoverBody,
-    PopoverHeader,
-} from '@chakra-ui/react'
-import { ExternalLinkIcon}  from '@chakra-ui/icons'
+import { ExternalLinkIcon } from "@chakra-ui/icons"
+import { Table, TableContainer, Thead, Tr, Th, Td, Tbody, Popover, PopoverTrigger, Button, PopoverContent, PopoverArrow, PopoverCloseButton, PopoverHeader, PopoverBody } from "@chakra-ui/react"
 
-const getFormattedDate = (date: Date) => {
-    return date.toLocaleDateString('en-us', { hour12: true, hour:"numeric", timeZone: "EST" }) 
-}
-
-const convertSecondsToMMSS = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-  
-    // Pad the minutes and seconds with leading zeros if necessary
-    const paddedMinutes = String(minutes).padStart(2, '0');
-    const paddedSeconds = String(remainingSeconds).padStart(2, '0');
-  
-    return `${paddedMinutes}:${paddedSeconds}`;
-}
-
-const getFormattedBossAndGateString = (wipe) => {
-    const gate = wipe.bossGate;
-    const gateName = gate.name;
-    const bossName = gate.boss.name;
-    return `${bossName} ${gateName}`
-}
-
-const generateWipeTagElements = (wipe) => {
-    const wipeTags = wipe.wipeTags as WipeTag[];
-    return (
-        <HStack justifyContent={'flex-start'}>
-            {wipeTags.map((tag, i) => (
-                <Tag size={'sm'} key={i} variant='solid' colorScheme='teal'>
-                {tag.description}
-                </Tag>
-            ))}
-</HStack>
-    )
-}
-
-const WipeList = ({wipes}) => {
-    if (!wipes || wipes.length === 0) return <span>no wipes reported</span>
+const ProgSessionTable = () => {
     return (
         <TableContainer mb={4}>
             <Table variant='striped' colorScheme='gray' size='sm' w={'full'}>
@@ -107,5 +50,4 @@ const WipeList = ({wipes}) => {
     )
 }
 
-
-export default WipeList
+export default ProgSessionTable

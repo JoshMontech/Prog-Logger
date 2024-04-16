@@ -1,35 +1,26 @@
+'use client'
 import React from 'react'
 import { Player } from '@prisma/client'
-import { Table, TableCaption, TableContainer, Tbody, Td, Tfoot, Th, Thead, Tr } from '@chakra-ui/react'
-
+import { Box, Heading, StackDivider, Table, TableCaption, TableContainer, Tbody, Td, Tfoot, Th, Thead, Tr, VStack } from '@chakra-ui/react'
+import { useSelectedPlayerStore } from '@/lib/zustand/playerStore'
 const StaticGroupTable = ({players}: {players: Player[]}) => {
+    const {setSelectedPlayer, selectedPlayer, clearSelectedPlayer} = useSelectedPlayerStore();
     if (!players || players.length === 0) return <span>no players</span>
-    const tableRows = [];
-    for(let i = 0; i < 8; i++) {
-        if (i <= 5) {
-            tableRows.push(
-                <Tr key={i}>
-                    <Td>{players[i++].name}</Td>
-                    <Td>{players[i].name}</Td>
-                </Tr>
-            )
-        } else {
-            tableRows.push(
-                <Tr key={i}>
-                    <Td borderBottom={'unset'}>{players[i++].name}</Td>
-                    <Td borderBottom={'unset'}>{players[i].name}</Td>
-                </Tr>
-            )
-        }
-    }
     return (
-        <TableContainer>
-        <Table variant='simple'>
-            <Tbody>
-                {tableRows}
-            </Tbody>
-        </Table>
-        </TableContainer>
+        <>
+        <Box borderRight={'1px solid lightgray'} p={4}>
+            <Heading size={'md'} mb={4}>Players</Heading>
+            <VStack 
+                divider={<StackDivider borderColor='gray.200' />}
+                spacing={4}
+                align='stretch'
+            >
+                {players.map((player, i) => (
+                    <Box key={i}><button onClick={() => player.id === selectedPlayer?.id ? clearSelectedPlayer() : setSelectedPlayer(player)} style={{fontWeight: player.id === selectedPlayer?.id ? '700' : '400'}}>{player.name}</button></Box>
+                ))}
+            </VStack>
+        </Box>
+        </>
     )
 }
 

@@ -6,10 +6,20 @@ export type WipeForm = {
     bossHealth: number
     elapsedTime: string
 }
-const progSessionWithWipes = Prisma.validator<Prisma.ProgSessionDefaultArgs>()({
-    include: { wipes: true }
+const progSessionWithWipeName = Prisma.validator<Prisma.ProgSessionDefaultArgs>()({
+    include: { 
+      wipes: {
+        include: {
+          bossGate: {
+           select: {
+            name: true
+           }
+          }
+        }
+      } 
+    }
   });
-export type ProgSessionWithDeaths = Prisma.ProgSessionGetPayload<typeof progSessionWithWipes>;
+export type ProgSessionWithWipeName = Prisma.ProgSessionGetPayload<typeof progSessionWithWipeName>;
 
 const staticGroupWithPlayers = Prisma.validator<Prisma.StaticGroupDefaultArgs>()({
   include: { players: true }

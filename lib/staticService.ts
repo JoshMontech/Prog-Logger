@@ -1,15 +1,3 @@
-
-
-// export async function createStatic(progData:any) {
-//   try {
-//     const response = await axios.post('/api/prog', progData);
-//     return response.data;
-//   } catch (error) {
-//     console.error('Error creating prog session:', error);
-//     throw error;
-//   }
-// }
-
 export async function getStaticGroups() {
     const response = await fetch(`${process.env.ENV}/api/static`, {cache: 'no-store'});
     return response.json();

@@ -47,18 +47,18 @@ model ProgSession {
 }
 
 model Wipe {
-    id            String      @id @default(uuid())
-    dateCreated   DateTime    @default(now())
-    progSession   ProgSession @relation(fields: [progSessionId], references: [id])
-    progSessionId String
-    player        Player?     @relation(fields: [playerId], references: [id])
-    playerId      String?
-    bossHealth    Float?
-    elapsedTime   String
-    note          String
-    bossGate      BossGate    @relation(fields: [bossGateId], references: [id])
-    bossGateId    String
-    wipeTags      WipeTag[]
+    id                     String      @id @default(uuid())
+    dateCreated            DateTime    @default(now())
+    progSession            ProgSession @relation(fields: [progSessionId], references: [id])
+    progSessionId          String
+    player                 Player?     @relation(fields: [playerId], references: [id])
+    playerId               String?
+    remainingHealthInBars  Int
+    remainingTimeInSeconds Int
+    note                   String?
+    bossGate               BossGate    @relation(fields: [bossGateId], references: [id])
+    bossGateId             String
+    wipeTags               WipeTag[]
 }
 
 model Boss {
@@ -68,15 +68,15 @@ model Boss {
 }
 
 model BossGate {
-    id             String    @id @default(uuid())
-    boss           Boss      @relation(fields: [bossId], references: [id])
-    bossId         String
-    name           String
-    description    String
-    healthbarsLeft Int
-    secondsLeft    Int
-    wipes          Wipe[]
-    wipeTags       WipeTag[]
+    id                 String    @id @default(uuid())
+    boss               Boss      @relation(fields: [bossId], references: [id])
+    bossId             String
+    name               String
+    description        String
+    totalHealthInBars  Int
+    totalTimeInSeconds Int
+    wipes              Wipe[]
+    wipeTags           WipeTag[]
 }
 
 model WipeTag {

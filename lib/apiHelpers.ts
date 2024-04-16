@@ -26,3 +26,8 @@ try {
 export default function getErrorMessage(error: unknown) {
 return toErrorWithMessage(error).message
 }
+
+export function getAbsoluteUrl () {
+    // local env
+    if (process.env.NODE_ENV === 'development') return 'http://localhost:3000'
+}

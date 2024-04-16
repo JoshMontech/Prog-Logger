@@ -15,7 +15,20 @@ export async function GET(
                         players: true
                     }
                 },
-                wipes: true
+                wipes: {
+                    orderBy: {
+                        dateCreated: 'desc'
+                    },
+                    include: {
+                        player: true,
+                        bossGate: {
+                            include: {
+                                boss:true
+                            }
+                        },
+                        wipeTags: true
+                    }
+                }
             },
         });
         return NextResponse.json(progSession);
@@ -28,25 +41,3 @@ export async function GET(
     } 
     return NextResponse.json({error: 'unknown error'}, {status: 500});
   }
-
-// export async function POST(
-//     res: NextResponse, 
-//     { params }: { params: { staticId: string }}
-// ) {
-//     const { staticId } = params
-//     try {
-//         const newProgSession = await prisma.progSession.create({
-//             data: {
-//                 staticGroupId: parseInt(staticId),
-//             },
-//         });
-//         return NextResponse.json(newProgSession)
-//     } catch (e: any) {
-//         if (typeof e === "string") {
-//             return NextResponse.json({error: `${e}`}, {status: 500});
-//         } else if (e instanceof Error) {
-//             return NextResponse.json({error: e.message}, {status: 500});
-//         }
-//     } 
-//     return NextResponse.json({error: 'unknown error'}, {status: 500});
-//   }

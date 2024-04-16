@@ -10,7 +10,7 @@ export async function GET(
         const progSessions = await prisma.progSession.findMany({
             where: {staticGroupId: staticId},
             include: {
-                players: true
+                players: true,
             },
         });
         return NextResponse.json(progSessions);

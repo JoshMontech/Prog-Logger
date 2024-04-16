@@ -15,8 +15,25 @@ export async function GET(
           include: {
             players: true, 
             progSessions: {
+              orderBy: {
+                dateCreated: 'desc'
+              },
               include: {
-                wipes: true, 
+                wipes: {
+                  include: {
+                    player: true,
+                    bossGate: {
+                     select: {
+                      name: true,
+                      boss: {
+                        select: {
+                          name: true
+                        }
+                      }
+                     }
+                    },
+                  }
+                }
               }
             },
           },
