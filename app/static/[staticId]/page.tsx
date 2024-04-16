@@ -2,10 +2,8 @@ import { Box, Flex, Breadcrumb, BreadcrumbItem, BreadcrumbLink } from '@chakra-u
 import { getStaticGroup } from '@/lib/staticService';
 import StaticGroupTable from '@/components/StaticGroupTable';
 import ProgSessionList from '@/components/ProgSessionsList';
-import { PLAYER_COLORS } from '@/lib/playerColors';
 import NextLink from 'next/link';
 import StaticGroupStats from '@/components/StaticGroupStats';
-
 
 const StaticGroupDashboardPage = async ({params}: {params:any}) => {
     const { staticId } = params;
