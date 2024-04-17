@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 
 
 // Handles only GET requests to fetch all static groups
-export async function GET(
+export async function GET(request: NextRequest,
     { params }: { params: { staticId: string }}
 ) {
     const { staticId } = params
