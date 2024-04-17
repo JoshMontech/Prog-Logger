@@ -23,7 +23,7 @@ export async function GET(request: NextRequest,
     return NextResponse.json({error: 'unknown error'}, {status: 500});
   }
 
-export async function POST(
+export async function POST(request: NextRequest,
     { params }: { params: { staticId: string }}
 ) {
     const { staticId } = params
