@@ -2,7 +2,6 @@ import prisma from '@/lib/prisma';
 import { NextResponse } from "next/server";
 
 export async function GET(
-    res: NextResponse, 
     { params }: { params: { staticId: string }}
 ) {
     const { staticId } = params
@@ -25,7 +24,6 @@ export async function GET(
   }
 
 export async function POST(
-    res: NextResponse, 
     { params }: { params: { staticId: string }}
 ) {
     const { staticId } = params
