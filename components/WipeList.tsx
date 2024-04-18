@@ -60,8 +60,8 @@ const generateWipeTagElements = (wipe) => {
 const WipeList = ({wipes}) => {
     if (!wipes || wipes.length === 0) return <span>no wipes reported</span>
     return (
-        <TableContainer mb={4}>
-            <Table variant='striped' colorScheme='gray' size='sm' w={'full'}>
+        <TableContainer mb={4}  maxH={'250px'} overflowY={'scroll'}>
+            <Table variant='striped' colorScheme='gray' size='sm' w={'full'} >
                 <Thead>
                 <Tr>
                     <Th>Player</Th>
